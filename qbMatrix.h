@@ -1,6 +1,12 @@
 #ifndef QBMATRIX2_H
 #define QBMATRIX2_H
 
+#include <stdexcept>
+#include <iostream>
+#include <iomanip>
+#include <math.h>
+#include <vector>
+
 template <class T>
 class qbMatrix2 {
 public:
@@ -8,9 +14,11 @@ public:
     qbMatrix2(int nRows, int nCols);
     qbMatrix2(int nRows, int nCols, const T* inputData);
     qbMatrix2(const qbMatrix2<T>& inputMatrix);
+    qbMatrix2(int nRows, int nCols, const std::vector<T>* inputData);
     ~qbMatrix2();
 
-    bool resize(int numRows, int numCols);
+    bool Resize(int numRows, int numCols);
+    void SetToIdentity();
 
     // access method
     T GetElement(int row, int col);
@@ -18,8 +26,13 @@ public:
     int GetNumRows();
     int GetNumCols();
 
+    bool Inverse();
+
     // overload operator
     bool operator== (const qbMatrix2<T>& rhs);
+
+    bool Compare(const qbMatrix2<T> matrix1, double tolerance);
+    bool Separate(qbMatrix2<T>* matrix1, qbMatrix2<T>*, int colNum);
 
     template <class U> friend qbMatrix2<U> operator+ (const qbMatrix2<U>& lhs, const qbMatrix2<U>& rhs);
     template <class U> friend qbMatrix2<U> operator+ (const U& lhs, const qbMatrix2<U>& rhs);
@@ -33,8 +46,16 @@ public:
     template <class U> friend qbMatrix2<U> operator* (const U& lhs, const qbMatrix2<U>& rhs);
     template <class U> friend qbMatrix2<U> operator* (const qbMatrix2<U>& lhs, const U& rhs);
 
-private:
+public:
     int Sub2Ind(int row, int col);
+    bool IsSquare();
+    bool ClooseEnough(T f1, T f2);
+    void SwapRow(int i, int j);
+    void MultAdd(int i, int j, T multFactor);
+    void MultRow(int i, T multFactor);
+    bool Join(const qbMatrix2<T>& matrix2);
+    int FindRowWithMaxElement(int colNumber, int startingRow);
+    void PrintMatrix();
 
 private:
     T* m_matrixData;
@@ -81,6 +102,16 @@ qbMatrix2<T>::qbMatrix2(const qbMatrix2<T>& inputMatrix) {
 }
 
 template <class T>
+qbMatrix2<T>::qbMatrix2(int nRows, int nCols, const std::vector<T>* inputData) {
+    m_nRows = nRows;
+    m_nCols = nCols;
+    m_nElements = m_nRows * m_nCols;
+    m_matrixData = new T[m_nElements];
+    for (int i = 0; i < m_nElements; ++i)
+        m_matrixData[i] = inputData->at(i);
+}
+
+template <class T>
 qbMatrix2<T>::~qbMatrix2() {
     if (m_matrixData != nullptr){
         delete[] m_matrixData;
@@ -88,7 +119,7 @@ qbMatrix2<T>::~qbMatrix2() {
 }
 
 template <class T>
-bool qbMatrix2<T>::resize(int numRows, int numCols) {
+bool qbMatrix2<T>::Resize(int numRows, int numCols) {
     m_nRows = numRows;
     m_nCols = numCols;
     m_nElements = m_nRows * m_nCols;
