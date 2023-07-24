@@ -135,6 +135,17 @@ bool qbMatrix2<T>::Resize(int numRows, int numCols) {
 }
 
 template <class T>
+void qbMatrix2<T>::SetToIdentity() {
+    if (!IsSquare()) throw std::invalid_argument("cannot form identity from non square matrix");
+    for (int row = 0; row < m_nRows; ++row) {
+        for (int col = 0; col < m_nCols; ++col) {
+            if (col == row) m_matrixData[Sub2Ind(row, col)] = 1.0;
+            else m_matrixData[Sub2Ind(row, col)] = 0.0;
+        }
+    }
+}
+
+template <class T>
 T qbMatrix2<T>::GetElement(int row, int col) {
     int linearIndex = Sub2Ind(row, col);
     if (linearIndex >= 0) {
