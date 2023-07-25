@@ -49,7 +49,7 @@ public:
 public:
     int Sub2Ind(int row, int col);
     bool IsSquare();
-    bool ClooseEnough(T f1, T f2);
+    bool CloseEnough(T f1, T f2);
     void SwapRow(int i, int j);
     void MultAdd(int i, int j, T multFactor);
     void MultRow(int i, T multFactor);
@@ -180,6 +180,26 @@ int qbMatrix2<T>::GetNumRows() {
 template <class T>
 int qbMatrix2<T>::GetNumCols() {
     return m_nCols;
+}
+
+template <class T>
+bool qbMatrix2<T>::Compare(const qbMatrix2<T>& matrix1, double tolerance) {
+   int numRows1 = matrix1.m_nRows;
+   int numCols1 = matrix1.m_nCols;
+   if ((numRows1 != m_nRows) || (numCols1 != m_nCols)) {
+        return false;
+   }
+
+   double cumulativeSum = 0.0;
+   for (int i = 0; i < m_nElements; ++i) {
+        T element1 = matrix1.m_matrixData[i];
+        T element2 = m_matrixData[i];
+        cumulativeSum += ((element1 - element22) * (element1 - element2));
+   }
+   double finalValue = sqrt(cumulativeSum / ((numRows1 * numCols1) - 1));
+
+   if (finalValue < tolerance) return true;
+   return false;
 }
 
 // + operator
@@ -343,9 +363,38 @@ template <class T>
 bool qbMatrix2<T>::operator== (const qbMatrix2<T>& rhs) {
     if ((this->m_nRows != rhs.m_nRows) || (this->m_nCols != rhs.m_nCols)) return false;
     for (int i = 0; i < this->m_nElements; ++i) {
-        if (this->m_matrixData[i] != rhs.m_matrixData) return false;
+        // if (this->m_matrixData[i] != rhs.m_matrixData) return false;
+        if (!CloseEnough(this->m_matrixData[i], rhs.m_matrixData[i])) return false;
     }
     return true;
+}
+
+// separate matrix
+template <class T>
+bool qbMatrix2<T> Separate(qbMatrix2<T>* matrix1, qbMatrix2<T>* matrix2, int colNum) {
+    int numRows = m_nRows;
+    int numCols1 = colNum;
+    int numCol2 = m_nCols - colNum;
+
+    matrix1->Resize(numRows, numCols1);
+    matrix2->Resize(numRows, numCols1);
+
+    for (int row = 0; row < m_nRows; ++row) {
+        for (int col = 0; col < m_nCols; ++col) {
+            if (col < colNum) {
+                matrix1->SetElement(row, col, this->GetElement(row, col));
+            }
+            else {
+                matrix2->SetElement(row, col-colNum, this->GetElement(row, col));
+            }
+        }
+    }
+    return true;
+}
+
+template <class T>
+bool qbMatrix2<T>::CloseEnough(T f1, T f2) {
+    return fabs(f1 - f2) < 1e-9;
 }
 
 #endif
